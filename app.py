@@ -417,11 +417,10 @@ def render_header(page: str):
 def page_language():
     st.markdown("## Välj språk &nbsp;/&nbsp; Choose language")
     lang = st.radio(
-        "",
+        "Välj språk / Select language",
         options=["sv", "en"],
-        format_func=lambda x: "Svenska" if x == "sv" else "English",
+        format_func=lambda x: "Svenska / Swedish" if x == "sv" else "English / Engelska",
         horizontal=True,
-        label_visibility="collapsed",
     )
     if st.button("Fortsätt / Continue", type="primary"):
         st.session_state.language = lang
