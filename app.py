@@ -101,11 +101,14 @@ STRINGS = {
         "info_sensitive": (
             "Dela inte känsliga personuppgifter om dig själv eller om kollegor under intervjun."
         ),
-        "info_voluntary_title": "Frivillighet",
+        "info_voluntary_title": "Tid och frivillighet",
         "info_voluntary": (
-            "Du kan avbryta när som helst utan att ange skäl. Om du avbryter sparas ingenting. "
-            "Om du vill bidra med de svar du hunnit ge innan intervjun är klar kan du säga det "
-            "i chatten – då kan du skicka in ändå."
+            "Intervjun är beräknad till cirka 15 minuter, men det är ingen hård gräns. "
+            "Du kan avbryta när som helst utan att ange skäl – om du avbryter sparas ingenting. "
+            "När 15 minuter har gått kommer intervjuaren att uppmärksamma dig på detta och fråga "
+            "om du vill fortsätta eller avsluta. Du bestämmer helt själv. "
+            "Om du vill bidra med de svar du hunnit ge utan att slutföra intervjun kan du säga "
+            "det i chatten – då kan du skicka in ändå."
         ),
         "accept": "Jag förstår och vill delta",
         "decline": "Nej tack",
@@ -184,11 +187,14 @@ STRINGS = {
             "Please do not share sensitive personal information about yourself or "
             "colleagues during the interview."
         ),
-        "info_voluntary_title": "Voluntary participation",
+        "info_voluntary_title": "Time and voluntary participation",
         "info_voluntary": (
-            "You may withdraw at any time without giving a reason. If you withdraw, "
-            "nothing is saved. If you wish to submit the responses you have given before "
-            "the interview is complete, you can say so in the chat."
+            "The interview is estimated to take approximately 15 minutes, but this is not a hard limit. "
+            "You may stop at any time without giving a reason — if you stop, nothing is saved. "
+            "When 15 minutes have passed, the interviewer will let you know and ask whether you "
+            "would like to continue or wrap up. The choice is entirely yours. "
+            "If you wish to submit the responses you have given without completing the interview, "
+            "you can say so in the chat and submit anyway."
         ),
         "accept": "I understand and wish to participate",
         "decline": "No thank you",
