@@ -312,31 +312,60 @@ def build_demographics_section(demo: dict) -> str:
 
 # ── Claude streaming ──────────────────────────────────────────────────────────
 
-INTERVIEW_MAX_SECONDS = 20 * 60  # 20 minutes
+INTERVIEW_HALFWAY_SECONDS = 7 * 60 + 30   # 7.5 minutes
+INTERVIEW_WARNING_SECONDS = 15 * 60        # 15 minutes
 
 TIME_INSTRUCTION_NORMAL = {
     "sv": (
-        "Intervjun bör inte överstiga 20 minuter totalt. "
-        "Håll ett tempo som medger att alla teman täcks inom den tidsramen, "
-        "och börja styra mot ett avslut när samtalet närmar sig den gränsen."
+        "Intervjun är planerad till cirka 15 minuter. "
+        "Fördela uppmärksamheten någorlunda jämnt över de fyra temana — "
+        "inget enskilt tema bör dominera mer än en fjärdedel av samtalet."
     ),
     "en": (
-        "The interview should not exceed 20 minutes in total. "
-        "Maintain a pace that allows all themes to be covered within that timeframe, "
-        "and begin moving toward a close as the conversation approaches that limit."
+        "The interview is planned to last approximately 15 minutes. "
+        "Distribute attention reasonably across the four themes — "
+        "no single theme should occupy more than a quarter of the conversation."
     ),
 }
 
-TIME_INSTRUCTION_OVER = {
+TIME_INSTRUCTION_HALFWAY = {
     "sv": (
-        "OBS: Intervjun har uppnått sin tidsgräns på 20 minuter. "
-        "Du måste avsluta intervjun i detta svar oavsett vilka teman som återstår. "
-        "Tacka deltagaren professionellt för deras tid och avsluta med [INTERVIEW_DONE]."
+        "Ungefär hälften av den planerade intervjutiden har nu gått. "
+        "Gör en intern bedömning av vilka teman som hittills behandlats tillräckligt "
+        "och vilka som ännu inte berörts — och börja styra samtalet mot de teman "
+        "som saknas, utan att avbryta trådar abrupt."
     ),
     "en": (
-        "NOTE: The interview has reached its 20-minute time limit. "
-        "You must close the interview in this response, regardless of which themes remain. "
-        "Thank the participant professionally for their time and end with [INTERVIEW_DONE]."
+        "Approximately half the planned interview time has now passed. "
+        "Internally assess which themes have been sufficiently covered and which "
+        "have not yet been addressed — and begin steering toward the missing ones, "
+        "without abruptly cutting off current threads."
+    ),
+}
+
+TIME_INSTRUCTION_WARNING = {
+    "sv": (
+        "Den planerade intervjutiden på 15 minuter har nu passerats. "
+        "Meddela deltagaren på ett naturligt sätt att den planerade tiden är slut, "
+        "och fråga om de vill fortsätta ett litet tag till eller om de föredrar att avsluta. "
+        "Anpassa dig till deras svar."
+    ),
+    "en": (
+        "The planned 15-minute interview time has now passed. "
+        "Let the participant know naturally that the planned time is up, "
+        "and ask whether they would like to continue for a little longer or prefer to wrap up. "
+        "Follow their lead."
+    ),
+}
+
+TIME_INSTRUCTION_EXTENDED = {
+    "sv": (
+        "Deltagaren har valt att fortsätta efter den planerade tiden. "
+        "Fortsätt intervjun naturligt och avsluta när samtalet känns färdigt."
+    ),
+    "en": (
+        "The participant has chosen to continue beyond the planned time. "
+        "Continue the interview naturally and close when the conversation feels complete."
     ),
 }
 
@@ -346,10 +375,17 @@ def stream_claude(messages: list, demographics: dict):
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
     lang = st.session_state.get("language", "sv")
     elapsed = time.time() - st.session_state.get("start_time", time.time())
-    time_instruction = (
-        TIME_INSTRUCTION_OVER[lang] if elapsed > INTERVIEW_MAX_SECONDS
-        else TIME_INSTRUCTION_NORMAL[lang]
-    )
+    warning_given = st.session_state.get("time_warning_given", False)
+
+    if elapsed > INTERVIEW_WARNING_SECONDS and not warning_given:
+        time_instruction = TIME_INSTRUCTION_WARNING[lang]
+        st.session_state.time_warning_given = True
+    elif warning_given:
+        time_instruction = TIME_INSTRUCTION_EXTENDED[lang]
+    elif elapsed > INTERVIEW_HALFWAY_SECONDS:
+        time_instruction = TIME_INSTRUCTION_HALFWAY[lang]
+    else:
+        time_instruction = TIME_INSTRUCTION_NORMAL[lang]
     system = SYSTEM_PROMPT.format(
         language="Swedish" if lang == "sv" else "English",
         demographics=build_demographics_section(demographics),
@@ -547,6 +583,7 @@ def page_demographics():
         st.session_state.messages = []
         st.session_state.start_time = time.time()
         st.session_state.interview_done = False
+        st.session_state.time_warning_given = False
         st.session_state.page = "interview"
         st.rerun()
 
