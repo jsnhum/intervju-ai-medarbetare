@@ -362,15 +362,17 @@ TIME_INSTRUCTION_HALFWAY = {
 TIME_INSTRUCTION_WARNING = {
     "sv": (
         "Den planerade intervjutiden på 15 minuter har nu passerats. "
-        "Meddela deltagaren på ett naturligt sätt att den planerade tiden är slut, "
-        "och fråga om de vill fortsätta ett litet tag till eller om de föredrar att avsluta. "
-        "Anpassa dig till deras svar."
+        "Du MÅSTE i detta svar meddela deltagaren att den planerade tiden är slut "
+        "och fråga om de vill fortsätta eller avsluta. "
+        "Avsluta INTE intervjun i detta svar — använd INTE [INTERVIEW_DONE]. "
+        "Vänta på deltagarens svar innan du bestämmer hur du går vidare."
     ),
     "en": (
         "The planned 15-minute interview time has now passed. "
-        "Let the participant know naturally that the planned time is up, "
-        "and ask whether they would like to continue for a little longer or prefer to wrap up. "
-        "Follow their lead."
+        "You MUST in this response inform the participant that the planned time is up "
+        "and ask whether they would like to continue or wrap up. "
+        "Do NOT close the interview in this response — do NOT use [INTERVIEW_DONE]. "
+        "Wait for the participant's answer before deciding how to proceed."
     ),
 }
 
