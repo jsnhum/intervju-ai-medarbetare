@@ -25,7 +25,15 @@ Conduct the entire interview in {language}. Do not switch languages under any ci
 
 **Participant context**
 {demographics}
-Use this information to orient the conversation to the participant's situation. If they work mostly in research, give more weight to research practices, epistemological questions, and scholarly workflows. If they work mostly in teaching, give more weight to pedagogical concerns, student use of AI, and classroom implications. Be aware of their subject area as a general backdrop — it may inform which concerns feel most pressing to them — but do not narrow the conversation to discipline-specific detail; the questions are broad enough to be relevant across the humanities. If no information was provided, proceed without assumptions.
+Use this information to orient the conversation without being mechanical about it. Let it shape your opening question and inform which angles you pursue, but do not refer to it explicitly or make the participant feel profiled.
+
+- Work distribution: weight the conversation accordingly — research practices and epistemological questions for researchers; pedagogy, student use, and classroom implications for teachers.
+- Subject area: treat as a general backdrop that may inform which concerns feel salient, but do not narrow to discipline-specific detail.
+- AI usage frequency: if they use AI daily, you can assume familiarity; if rarely or never, open more gently and do not presuppose experience.
+- AI tools used: gives you a sense of where their experience lies; you may reference these types of tools when relevant but avoid making the interview feel like a product review.
+- Self-reported attitude: treat as a starting orientation only. Someone who says "mostly negative" may still have nuanced or positive experiences worth exploring; someone "mostly positive" may harbour real concerns. Follow what the conversation actually reveals.
+
+If no information was provided, proceed without assumptions.
 
 **Conduct and style**
 - Maintain a professional, respectful tone throughout — engaged and attentive, but not overly familiar
@@ -117,6 +125,23 @@ STRINGS = {
             "Ungefär lika delar forskning och undervisning",
             "Mestadels administration",
         ],
+        "demo_frequency_label": "Hur ofta använder du AI i ditt arbete?",
+        "demo_frequency_options": [
+            "Vill inte ange", "Dagligen", "Några gånger i veckan",
+            "Några gånger i månaden", "Sällan eller aldrig",
+        ],
+        "demo_systems_label": "Vilka typer av AI-verktyg använder du? (välj alla som stämmer)",
+        "demo_systems_options": [
+            "Chattbotar (t.ex. ChatGPT, Claude, Gemini)",
+            "AI-verktyg för skrivande/redigering (t.ex. Copilot, Grammarly)",
+            "Bild- eller mediegenerering",
+            "AI-assisterad sökning",
+            "Annat",
+        ],
+        "demo_attitude_label": "Hur skulle du övergripande beskriva din inställning till AI?",
+        "demo_attitude_options": [
+            "Vill inte ange", "Mestadels positiv", "Varken eller", "Mestadels negativ",
+        ],
         "start_interview": "Starta intervjun",
         "interview_title": "## Intervju",
         "abort": "Avbryt (sparas inte)",
@@ -183,6 +208,23 @@ STRINGS = {
             "Roughly equal research and teaching",
             "Mostly administration",
         ],
+        "demo_frequency_label": "How often do you use AI in your work?",
+        "demo_frequency_options": [
+            "Prefer not to say", "Daily", "A few times a week",
+            "A few times a month", "Rarely or never",
+        ],
+        "demo_systems_label": "Which types of AI tools do you use? (select all that apply)",
+        "demo_systems_options": [
+            "Chatbots (e.g. ChatGPT, Claude, Gemini)",
+            "AI writing/editing tools (e.g. Copilot, Grammarly)",
+            "Image or media generation",
+            "AI-assisted search",
+            "Other",
+        ],
+        "demo_attitude_label": "How would you broadly describe your attitude toward AI?",
+        "demo_attitude_options": [
+            "Prefer not to say", "Mostly positive", "Neither positive nor negative", "Mostly negative",
+        ],
         "start_interview": "Start interview",
         "interview_title": "## Interview",
         "abort": "Abort (nothing saved)",
@@ -236,6 +278,9 @@ def save_to_sheets(demographics: dict, messages: list, start_time: float, langua
             user_msgs,
             demographics.get("subject", ""),
             demographics.get("balance", ""),
+            demographics.get("frequency", ""),
+            ", ".join(demographics.get("systems", [])),
+            demographics.get("attitude", ""),
             json.dumps(messages, ensure_ascii=False),
         ]
         sheet.append_row(row)
@@ -250,15 +295,19 @@ _SKIP = {"Vill inte ange", "Prefer not to say", ""}
 
 def build_demographics_section(demo: dict) -> str:
     lines = []
-    subject = demo.get("subject", "")
-    balance = demo.get("balance", "")
-    if subject and subject not in _SKIP:
-        lines.append(f"- Subject area: {subject}")
-    if balance and balance not in _SKIP:
-        lines.append(f"- Work distribution: {balance}")
+    if (v := demo.get("subject", "")) and v not in _SKIP:
+        lines.append(f"- Subject area: {v}")
+    if (v := demo.get("balance", "")) and v not in _SKIP:
+        lines.append(f"- Work distribution: {v}")
+    if (v := demo.get("frequency", "")) and v not in _SKIP:
+        lines.append(f"- AI usage frequency: {v}")
+    if systems := demo.get("systems", []):
+        lines.append(f"- AI tools used: {', '.join(systems)}")
+    if (v := demo.get("attitude", "")) and v not in _SKIP:
+        lines.append(f"- Self-reported attitude toward AI: {v}")
     if not lines:
-        return "No demographic information was provided."
-    return "The participant provided the following context:\n" + "\n".join(lines)
+        return "No background information was provided."
+    return "The participant provided the following background information:\n" + "\n".join(lines)
 
 
 # ── Claude streaming ──────────────────────────────────────────────────────────
@@ -472,14 +521,15 @@ def page_demographics():
     st.write(t("demo_intro"))
 
     subject_options = t("demo_subject_options")
-    balance_options = t("demo_balance_options")
-
     subject = st.selectbox(t("demo_subject_label"), subject_options)
     subject_other = ""
     if subject == subject_options[-1]:  # "Annat" / "Other"
         subject_other = st.text_input(t("demo_subject_other_label"))
 
-    balance = st.selectbox(t("demo_balance_label"), balance_options)
+    balance = st.selectbox(t("demo_balance_label"), t("demo_balance_options"))
+    frequency = st.selectbox(t("demo_frequency_label"), t("demo_frequency_options"))
+    systems = st.multiselect(t("demo_systems_label"), t("demo_systems_options"))
+    attitude = st.selectbox(t("demo_attitude_label"), t("demo_attitude_options"))
 
     if st.button(t("start_interview"), type="primary"):
         final_subject = (
@@ -487,7 +537,13 @@ def page_demographics():
             if subject == subject_options[-1] and subject_other.strip()
             else subject
         )
-        st.session_state.demographics = {"subject": final_subject, "balance": balance}
+        st.session_state.demographics = {
+            "subject": final_subject,
+            "balance": balance,
+            "frequency": frequency,
+            "systems": systems,
+            "attitude": attitude,
+        }
         st.session_state.messages = []
         st.session_state.start_time = time.time()
         st.session_state.interview_done = False
